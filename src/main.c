@@ -14,6 +14,7 @@
 #include "esp_system.h"
 #include "driver/gpio.h"
 #include "pins.h"
+#include "MAX2769.h"
 
 #include "driver/spi_master.h"
 
@@ -31,25 +32,6 @@ void init_gpio(void) {
     gpio_set_level(LED_GREEN, 0);
     gpio_set_level(LED_ORANGE, 0);
     // gpio_set_level(CS, 1);
-}
-
-esp_err_t max_write(spi_device_handle_t handle) {
-    spi_transaction_t t = {
-        .cmd = 0,
-        .flags = SPI_TRANS_USE_TXDATA | SPI_TRANS_USE_RXDATA,
-        .user = NULL,
-        .tx_data = {0x0, 0x0, 0x0, 0x0},
-        .length = 4
-    };
-
-    spi_device_acquire_bus(handle, portMAX_DELAY);
-    esp_err_t err = spi_device_polling_transmit(handle, &t);
-    spi_device_release_bus(handle);
-    if (err != ESP_OK) {
-        return err;
-    }
-
-    return ESP_OK;
 }
 
 void app_main(void)
@@ -87,8 +69,8 @@ void app_main(void)
     gpio_set_level(LED_ORANGE, 1);
 
     // // Now try writing to it?
+    setup_max2769(handle);
     while (1) {
-        max_write(handle);
         vTaskDelay(1);
     }
 }

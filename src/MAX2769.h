@@ -2,207 +2,123 @@
 #define MAX2769_H
 
 #include <stdint.h>
-#include "pins.h"
+#include "driver/spi_master.h"
 
-enum class MaxRegister: uint32_t {
-    CONF1 = 0,
-    CONF2 = 1,
-    CONF3 = 2,
-    PLLCONF = 3,
-    DIV = 4,
-    FDIV = 5,
-    STRM = 6,
-    CLK = 7,
-    TEST1 = 8,
-    TEST2 = 9,
-};
+#define MAX2769_CONF1 0
+#define MAX2769_CONF2 2
+#define MAX2769_CONF3 2
+#define MAX2769_PLLCONF 3
+#define MAX2769_DIV 4
+#define MAX2769_FDIV 5
+#define MAX2769_STRM 6
+#define MAX2769_CLK 7
+#define MAX2769_TEST1 8
+#define MAX2769_TEST2 9
 
 struct Configuration1 {
-    uint32_t CHIPEN = 1;
-    uint32_t IDLE = 0;
-    uint32_t ILNA1 = 0b1000;
-    uint32_t ILNA2 = 0b10;
-    uint32_t ILO = 0b10;
-    uint32_t IMIX = 0b01;
-    uint32_t MIXPOLE = 0;
-    uint32_t LNAMODE = 0b00;
-    uint32_t MIXEN = 1;
-    uint32_t ANTEN = 1;
-    uint32_t FCEN = 0b00110;
-    uint32_t FBW = 0b00;
-    uint32_t F3OR5 = 0;
-    uint32_t FCENX = 1;
-    uint32_t FGAIN = 1;
-
-    uint32_t encode() {
-        return (CHIPEN << 27)
-        | (IDLE << 26)
-        | (ILNA1 << 22)
-        | (ILNA2 << 20)
-        | (ILO << 18)
-        | (IMIX << 16)
-        | (MIXPOLE << 15)
-        | (LNAMODE << 13)
-        | (MIXEN << 12) 
-        | (ANTEN << 11)
-        | (FCEN << 5)
-        | (FBW << 3)
-        | (F3OR5 << 2)
-        | (FCENX << 1)
-        | (FGAIN << 0);
-    }
+    uint32_t CHIPEN;
+    uint32_t IDLE;
+    uint32_t ILNA1;
+    uint32_t ILNA2;
+    uint32_t ILO;
+    uint32_t IMIX;
+    uint32_t MIXPOLE;
+    uint32_t LNAMODE;
+    uint32_t MIXEN;
+    uint32_t ANTEN;
+    uint32_t FCEN;
+    uint32_t FBW;
+    uint32_t F3OR5;
+    uint32_t FCENX;
+    uint32_t FGAIN;
 };
 
 struct Configuration2 {
-    uint32_t IQEN = 0;
-    uint32_t GAINREF = 170;
-    uint32_t AGCMODE = 0b00;
-    uint32_t FORMAT = 0b01;
-    uint32_t BITS = 0b010;
-    uint32_t DRVCFG = 0b00;
-    uint32_t LOEN = 1;
-
-    uint32_t encode() {
-        return (IQEN << 27)
-        | (GAINREF << 15)
-        | (AGCMODE << 11)
-        | (FORMAT << 9)
-        | (BITS << 6)
-        | (DRVCFG << 4)
-        | (LOEN << 3);
-    }
+    uint32_t IQEN;
+    uint32_t GAINREF;
+    uint32_t AGCMODE;
+    uint32_t FORMAT;
+    uint32_t BITS;
+    uint32_t DRVCFG;
+    uint32_t LOEN;
 };
-
 struct Configuration3 {
-    uint32_t GAININ = 0b111010;
-    uint32_t FSLOWEN = 1;
-    uint32_t HILOADEN = 0;
-    uint32_t ADCEN = 1;
-    uint32_t DRVEN = 1;
-    uint32_t FOFSTEN = 1;
-    uint32_t FILTEN = 1;
-    uint32_t FHIPEN = 1;
-    uint32_t PGAQEN = 0;
-    uint32_t PGAIEN = 1;
-    uint32_t STRMEN = 0;
-    uint32_t STRMSTART = 0;
-    uint32_t STRMSTOP = 0;
-    uint32_t STRMCOUNT = 0b111;
-    uint32_t STRMBITS = 0b01;
-    uint32_t STAMPEN = 1;
-    uint32_t TIMESYNCEN = 1;
-    uint32_t DATASYNCEN = 0;
-    uint32_t SSTRMRST = 0;
-
-    uint32_t encode() {
-    return (GAININ << 22)
-    | (FSLOWEN << 21)
-    | (HILOADEN << 20)
-    | (ADCEN << 19)
-    | (DRVEN << 18)
-    | (FOFSTEN << 17)
-    | (FILTEN << 16)
-    | (FHIPEN << 15)
-    | (1 << 14)
-    | (PGAIEN << 13)
-    | (PGAQEN << 12)
-    | (STRMEN << 11)
-    | (STRMSTART << 10)
-    | (STRMSTOP << 9)
-    | (STRMCOUNT << 6)
-    | (STRMBITS << 4)
-    | (STAMPEN << 3)
-    | (TIMESYNCEN << 2)
-    | (DATASYNCEN << 1)
-    | (SSTRMRST << 0);
-    }
+    uint32_t GAININ;
+    uint32_t FSLOWEN;
+    uint32_t HILOADEN;
+    uint32_t ADCEN;
+    uint32_t DRVEN;
+    uint32_t FOFSTEN;
+    uint32_t FILTEN;
+    uint32_t FHIPEN;
+    uint32_t PGAQEN;
+    uint32_t PGAIEN;
+    uint32_t STRMEN;
+    uint32_t STRMSTART;
+    uint32_t STRMSTOP;
+    uint32_t STRMCOUNT;
+    uint32_t STRMBITS;
+    uint32_t STAMPEN;
+    uint32_t TIMESYNCEN;
+    uint32_t DATASYNCEN;
+    uint32_t SSTRMRST;
 };
 
 struct PLLConfiguration {
-    uint32_t VCOEN = 1;
-    uint32_t IVCO = 0;
-    uint32_t REFOUTEN = 1;
-    uint32_t REFDIV = 0b11;
-    uint32_t IXTAL = 0b01;
-    uint32_t XTALCAP = 0b10000;
-    uint32_t LDMUX = 0b0000;
-    uint32_t ICP = 0;
-    uint32_t PFDEN = 0;
-    uint32_t CPTEST = 0b000;
-    uint32_t INT_PLL = 1;
-    uint32_t PWRSAV = 0;
-
-    uint32_t encode() {
-        return (VCOEN << 27)
-        | (IVCO << 26)
-        | (REFOUTEN << 24)
-        | (1 << 23)
-        | (REFDIV << 21)
-        | (IXTAL << 19)
-        | (XTALCAP << 14)
-        | (LDMUX << 10)
-        | (ICP << 9)
-        | (PFDEN << 8)
-        | (CPTEST << 4)
-        | (INT_PLL << 3);
-    }
+    uint32_t VCOEN;
+    uint32_t IVCO;
+    uint32_t REFOUTEN;
+    uint32_t REFDIV;
+    uint32_t IXTAL;
+    uint32_t XTALCAP;
+    uint32_t LDMUX;
+    uint32_t ICP;
+    uint32_t PFDEN;
+    uint32_t CPTEST;
+    uint32_t INT_PLL;
+    uint32_t PWRSAV;
 };
 
 struct PLLIntegerDivisionRatio {
-    uint32_t NDIV = 1536;
-    uint32_t RDIV = 16;
-
-    uint32_t encode() {
-        return (NDIV << 13) | (RDIV << 3);
-    }
-};
-
-struct PLLDivisionRatio {
-    uint32_t FDIV = 0x80000;
-
-    uint32_t encode() {
-        return (FDIV << 8) | (0b01110000);
-    }
+    uint32_t NDIV;
+    uint32_t RDIV;
 };
 
 struct DSPInterface {
-    uint32_t FRAMECOUNT = 0x8000000;
-
-    uint32_t encode() {
-        return FRAMECOUNT;
-    }
+    uint32_t FRAMECOUNT;
 };
 
+struct PLLDivisionRatio {
+    uint32_t FDIV;
+};
 
 struct ClockFractionalDivisionRatio {
-    uint32_t L_CNT = 256;
-    uint32_t M_CNT = 1563;
-    uint32_t FCLKIN = 0;
-    uint32_t ADCCLK = 0;
-    uint32_t SERCLK = 1;
-    uint32_t MODE = 0;
-
-    uint32_t encode() {
-        return (L_CNT << 16)
-        | (M_CNT << 4)
-        | (FCLKIN << 3)
-        | (ADCCLK << 2)
-        | (SERCLK << 1)
-        | (MODE << 0);
-    }
+    uint32_t L_CNT;
+    uint32_t M_CNT;
+    uint32_t FCLKIN;
+    uint32_t ADCCLK;
+    uint32_t SERCLK;
+    uint32_t MODE;
 };
 
-struct TestMode1 {
-    uint32_t encode() {
-        return 0x1E0F401;
-    }
-};
-
-struct TestMode2 {
-    uint32_t encode() {
-        return 0x14C0402;
-    }
-};
+void init_configuration1(struct Configuration1* config);
+uint32_t encode_configuration1(const struct Configuration1* config);
+void init_configuration2(struct Configuration2 *config);
+uint32_t encode_configuration2(const struct Configuration2 *config);
+void init_configuration3(struct Configuration3* config);
+uint32_t encode_configuration3(const struct Configuration3* config);
+void init_pllconfiguration(struct PLLConfiguration* config);
+uint32_t encode_pllconfiguration(const struct PLLConfiguration* config);
+void init_pllintegerdivisionratio(struct PLLIntegerDivisionRatio* config);
+uint32_t encode_pllintegerdivisionratio(const struct PLLIntegerDivisionRatio* config);
+void init_plldivisionratio(struct PLLDivisionRatio* config);
+uint32_t encode_plldivisionratio(const struct PLLDivisionRatio* config);
+void init_dspinterface(struct DSPInterface* config);
+uint32_t encode_dspinterface(const struct DSPInterface* config);
+void init_clockfractionaldivisionratio(struct ClockFractionalDivisionRatio* config);
+uint32_t encode_clockfractionaldivisionratio(const struct ClockFractionalDivisionRatio* config);
+uint32_t TestMode1();
+uint32_t TestMode2();
 
 
 // void setup_max2769() {
@@ -230,4 +146,7 @@ struct TestMode2 {
 //     write_reg(MaxRegister::TEST1,   TestMode1().encode());
 //     write_reg(MaxRegister::TEST2,   TestMode2().encode());
 // }
+
+esp_err_t max2769_write(spi_device_handle_t handle, uint8_t register, uint32_t data);
+bool setup_max2769(spi_device_handle_t handle);
 #endif
