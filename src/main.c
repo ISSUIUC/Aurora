@@ -23,30 +23,28 @@ void init_gpio(void) {
     gpio_set_direction(LED_BLUE, GPIO_MODE_OUTPUT);
     gpio_set_direction(LED_GREEN, GPIO_MODE_OUTPUT);
     gpio_set_direction(LED_ORANGE, GPIO_MODE_OUTPUT);
-    gpio_set_direction(CS, GPIO_MODE_OUTPUT);
+    // gpio_set_direction(CS, GPIO_MODE_OUTPUT);
 
     // Disable all GPIOs
     gpio_set_level(LED_RED, 0);
     gpio_set_level(LED_BLUE, 0);
     gpio_set_level(LED_GREEN, 0);
     gpio_set_level(LED_ORANGE, 0);
-    gpio_set_level(CS, 1);
+    // gpio_set_level(CS, 1);
 }
 
 esp_err_t max_write(spi_device_handle_t handle) {
     spi_transaction_t t = {
         .cmd = 0,
-        .rxlength = 8,
         .flags = SPI_TRANS_USE_TXDATA | SPI_TRANS_USE_RXDATA,
         .user = NULL,
-        .tx_data = {0x0, 0x0, 0x0, 0x0}
+        .tx_data = {0x0, 0x0, 0x0, 0x0},
+        .length = 4
     };
-    // Make it low?
-    gpio_set_level(CS, 0);
+
     spi_device_acquire_bus(handle, portMAX_DELAY);
     esp_err_t err = spi_device_polling_transmit(handle, &t);
     spi_device_release_bus(handle);
-    gpio_set_level(CS, 1);
     if (err != ESP_OK) {
         return err;
     }
@@ -59,32 +57,40 @@ void app_main(void)
     init_gpio();
     gpio_set_level(LED_GREEN, 1);
     spi_bus_config_t max_2769_serial_in = {
-        .miso_io_num = 30, // We do not have master in for the MAX 2769
+        .miso_io_num = -1, // We do not have master in for the MAX 2769
         .mosi_io_num = MOSI,
         .sclk_io_num = SCK,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
         .max_transfer_sz = 32,
     };
-
-    esp_err_t err = spi_bus_initialize(SPI2_HOST, &max_2769_serial_in, SPI_DMA_CH_AUTO);
-    ESP_ERROR_CHECK(err);
+    printf("Setting");
+    fflush(stdout);
+    esp_err_t err = spi_bus_initialize(SPI2_HOST, &max_2769_serial_in, SPI_DMA_DISABLED);
+    gpio_set_level(LED_BLUE, 1);
     if (err != ESP_OK) {
         gpio_set_level(LED_RED, 1);
     }
+    // ESP_ERROR_CHECK(err);
+    printf("Setup SPI bus");
+    fflush(stdout);
     spi_device_interface_config_t max_2769_config = {
         .command_bits = 0,
         .address_bits = 0,
-        .mode = 0
+        .mode = 0,
+        .queue_size = 1,
+        .clock_speed_hz = 10 * 1000 * 1000,
+        .spics_io_num = CS
     };
     spi_device_handle_t handle;
-    gpio_set_level(LED_BLUE, 1);
     err = spi_bus_add_device(SPI2_HOST, &max_2769_config, &handle);
     gpio_set_level(LED_ORANGE, 1);
 
-    // Now try writing to it?
-    max_write(handle);
-    while (1);
+    // // Now try writing to it?
+    while (1) {
+        max_write(handle);
+        vTaskDelay(1);
+    }
 }
 
 // Max driver...
