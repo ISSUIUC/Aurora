@@ -24,14 +24,12 @@ void init_gpio(void) {
     gpio_set_direction(LED_BLUE, GPIO_MODE_OUTPUT);
     gpio_set_direction(LED_GREEN, GPIO_MODE_OUTPUT);
     gpio_set_direction(LED_ORANGE, GPIO_MODE_OUTPUT);
-    // gpio_set_direction(CS, GPIO_MODE_OUTPUT);
 
     // Disable all GPIOs
     gpio_set_level(LED_RED, 0);
     gpio_set_level(LED_BLUE, 0);
     gpio_set_level(LED_GREEN, 0);
     gpio_set_level(LED_ORANGE, 0);
-    // gpio_set_level(CS, 1);
 }
 
 void app_main(void)
@@ -60,7 +58,7 @@ void app_main(void)
         .command_bits = 0,
         .address_bits = 0,
         .mode = 0,
-        .queue_size = 1,
+        .queue_size = 10,
         .clock_speed_hz = 10 * 1000 * 1000,
         .spics_io_num = CS
     };
@@ -74,5 +72,3 @@ void app_main(void)
         vTaskDelay(1);
     }
 }
-
-// Max driver...
