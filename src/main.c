@@ -17,6 +17,7 @@
 #include "MAX2769.h"
 
 #include "driver/spi_master.h"
+#include "max_read.h"
 
 void init_gpio(void) {
     // Init gpio
@@ -59,16 +60,34 @@ void app_main(void)
         .address_bits = 0,
         .mode = 0,
         .queue_size = 10,
-        .clock_speed_hz = 10 * 1000 * 1000,
+        .clock_speed_hz = 1 * 1000 * 1000,
         .spics_io_num = CS
     };
     spi_device_handle_t handle;
     err = spi_bus_add_device(SPI2_HOST, &max_2769_config, &handle);
     gpio_set_level(LED_ORANGE, 1);
 
+    struct Configuration1 conf1;
+    struct Configuration2 conf2;
+    struct Configuration3 conf3;
+
+    init_configuration1(&conf1);
+    init_configuration2(&conf2);
+    init_configuration3(&conf3);
+
+    conf3.STRMCOUNT = 0b000;
+    conf3.STRMEN = 0b1;
+    conf3.STAMPEN = 0b1;
+    conf3.TIMESYNCEN = 0b0;
+    conf3.DATASYNCEN = 0b0;
     // // Now try writing to it?
     setup_max2769(handle);
     while (1) {
         vTaskDelay(1);
+        // Write strm start
+        conf3.STRMEN = 0b1;
+        max2769_write(handle, MAX2769_CONF3, encode_configuration3(&conf3));
+        //max_read();
+        vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
