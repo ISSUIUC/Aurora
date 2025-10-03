@@ -39,7 +39,7 @@ esp_err_t max2769_write(spi_device_handle_t handle, uint8_t register_id, uint32_
         .cmd = 0,
         .flags = SPI_TRANS_USE_TXDATA | SPI_TRANS_USE_RXDATA,
         .user = NULL,
-        .tx_data = {(data >> 8) & 0xFF, (data >> 4) & 0xFF, data & 0xFF, register_id},
+        .tx_data = {(data >> 16) & 0xFF, (data >> 8) & 0xFF, data & 0xFF, register_id},
         .length = 32
     };
 

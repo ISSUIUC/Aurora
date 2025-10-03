@@ -83,7 +83,6 @@ void app_main(void)
     // // Now try writing to it?
     setup_max2769(handle);
     while (1) {
-        vTaskDelay(1);
         // Write strm start
         conf3.STRMEN = 0b1;
         max2769_write(handle, MAX2769_CONF3, encode_configuration3(&conf3));
