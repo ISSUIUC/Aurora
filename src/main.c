@@ -79,6 +79,7 @@ void app_main(void)
     conf3.STRMEN = 0b1;
     conf3.STAMPEN = 0b1;
     conf3.TIMESYNCEN = 0b0;
+    conf3.STRMSTART = 0b1;
     conf3.DATASYNCEN = 0b0;
     // // Now try writing to it?
     setup_max2769(handle);
