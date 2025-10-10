@@ -70,7 +70,7 @@ void read_max2(void) {
     // while(ret2 != ESP_OK) printf("Error enabling %x\n",ret2);
 
     while(true){
-        int ret = i2s_channel_read(rx_handle, buf, 128, &bytes_read, 200);
+        int ret = i2s_channel_read(rx_handle, buf, 128, &bytes_read, portMAX_DELAY);
         if(ret != ESP_OK){
             printf("Error reading %d\n",ret);
         } else {
