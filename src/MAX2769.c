@@ -22,6 +22,7 @@ bool setup_max2769(spi_device_handle_t handle) {
     max2769_write(handle, MAX2769_CONF1, encode_configuration1(&conf1));
     max2769_write(handle, MAX2769_CONF2, encode_configuration2(&conf2));
     max2769_write(handle, MAX2769_CONF3, encode_configuration3(&conf3));
+    // max2769_write(handle, MAX2769_PLLCONF, encode_configuration3(&conf3));
 
     spi_device_release_bus(handle);
     return true;

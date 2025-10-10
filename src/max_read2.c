@@ -53,7 +53,7 @@ void read_max2(void) {
             .dout = I2S_GPIO_UNUSED,
             .bclk = I0,
             .din = I1,
-            .ws = Q1,
+            .ws = I2S_GPIO_UNUSED,
             .invert_flags = {
                 .mclk_inv = false,
                 .bclk_inv = false,
@@ -61,6 +61,7 @@ void read_max2(void) {
             },
         },
     };
+    std_cfg.clk_cfg.clk_src = I2S_CLK_SRC_PLL_160M;
     /* Initialize the channel */
     int ret2 = i2s_channel_init_std_mode(rx_handle, &std_cfg);
     while(ret2 != ESP_OK) printf("Error init %x\n",ret2);
