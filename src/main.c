@@ -79,7 +79,7 @@ void app_main(void)
     conf3.STRMCOUNT = 0b111;
     conf3.STRMEN = 0b1;
     conf3.ADCEN = 0b0;
-    conf3.STAMPEN = 0b0;
+    conf3.STAMPEN = 0b1;
     conf3.TIMESYNCEN = 0b0;
     conf3.STRMSTART = 0b1;
     conf3.DATASYNCEN = 0b1;

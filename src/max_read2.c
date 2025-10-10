@@ -12,7 +12,7 @@
 // #include "freertos/task.h"
 
 
-char buf[128];
+char buf[1024];
 size_t bytes_read;
 // Reference:
 // https://github.com/espressif/esp-idf/tree/v5.5.1/examples/peripherals/i2s/i2s_recorder
@@ -53,15 +53,14 @@ void read_max2(void) {
             .dout = I2S_GPIO_UNUSED,
             .bclk = I0,
             .din = I1,
-            .ws = I2S_GPIO_UNUSED,
+            .ws = Q1,
             .invert_flags = {
                 .mclk_inv = false,
-                .bclk_inv = false,
+                .bclk_inv = true,
                 .ws_inv = false,
             },
         },
     };
-    std_cfg.clk_cfg.clk_src = I2S_CLK_SRC_PLL_160M;
     /* Initialize the channel */
     int ret2 = i2s_channel_init_std_mode(rx_handle, &std_cfg);
     while(ret2 != ESP_OK) printf("Error init %x\n",ret2);
@@ -71,13 +70,14 @@ void read_max2(void) {
     // while(ret2 != ESP_OK) printf("Error enabling %x\n",ret2);
 
     while(true){
-        int ret = i2s_channel_read(rx_handle, buf, 128, &bytes_read, portMAX_DELAY);
+        int ret = i2s_channel_read(rx_handle, buf, 1024, &bytes_read, portMAX_DELAY);
         if(ret != ESP_OK){
             printf("Error reading %d\n",ret);
         } else {
             printf("Read %d bytes\n",(int)bytes_read);
             printbin(buf,bytes_read);
         }
+        // memset(buf, 0, 128);
     }
     /* Have to stop the channel before deleting it */
     i2s_channel_disable(rx_handle);

@@ -4,10 +4,14 @@ bool setup_max2769(spi_device_handle_t handle) {
     struct Configuration1 conf1;
     struct Configuration2 conf2;
     struct Configuration3 conf3;
+    struct PLLConfiguration pll_config;
+    struct ClockFractionalDivisionRatio clock_fractional_div_ratio;
 
     init_configuration1(&conf1);
     init_configuration2(&conf2);
     init_configuration3(&conf3);
+    init_pllconfiguration(&pll_config);
+    init_clockfractionaldivisionratio(&clock_fractional_div_ratio);
     conf2.IQEN = 0;
     conf2.FORMAT = 0b10;
     conf2.BITS = 0b100;
@@ -16,13 +20,16 @@ bool setup_max2769(spi_device_handle_t handle) {
     conf3.STAMPEN = 0b1;
     conf3.TIMESYNCEN = 0b0;
     conf3.DATASYNCEN = 0b0;
+    pll_config.REFDIV = 0b01;
+    clock_fractional_div_ratio.SERCLK  = 0b0;
 
     spi_device_acquire_bus(handle, portMAX_DELAY);
 
     max2769_write(handle, MAX2769_CONF1, encode_configuration1(&conf1));
     max2769_write(handle, MAX2769_CONF2, encode_configuration2(&conf2));
     max2769_write(handle, MAX2769_CONF3, encode_configuration3(&conf3));
-    // max2769_write(handle, MAX2769_PLLCONF, encode_configuration3(&conf3));
+    max2769_write(handle, MAX2769_PLLCONF, encode_pllconfiguration(&pll_config));
+    max2769_write(handle, MAX2769_CLK, encode_clockfractionaldivisionratio(&clock_fractional_div_ratio));
 
     spi_device_release_bus(handle);
     return true;
