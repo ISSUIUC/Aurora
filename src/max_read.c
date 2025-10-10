@@ -7,15 +7,15 @@
 #include "pins.h"
 #include "soc/gpio_pins.h"
 
-void printbin(char *data,int len){
-    for(int i =0;i<len/8;i++){
-        char c = data[i*8];
-        for(int j =0;j<8;j++){
-            printf("%c ",'0'+(c&(0x80>>j)));
-        }
-        printf("\n");
-    }
-}
+// void printbin(char *data,int len){
+//     for(int i =0;i<len/8;i++){
+//         char c = data[i*8];
+//         for(int j =0;j<8;j++){
+//             printf("%c ",'0'+(c&(0x80>>j)));
+//         }
+//         printf("\n");
+//     }
+// }
 
 void max_read(void) {
     spi_bus_config_t slave_bus_config = {

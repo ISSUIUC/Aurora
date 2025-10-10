@@ -18,6 +18,7 @@
 
 #include "driver/spi_master.h"
 #include "max_read.h"
+#include "max_read2.h"
 
 void init_gpio(void) {
     // Init gpio
@@ -85,9 +86,10 @@ void app_main(void)
     setup_max2769(handle);
     while (1) {
         // Write strm start
+        // printf("aaa\n");
         conf3.STRMEN = 0b1;
         max2769_write(handle, MAX2769_CONF3, encode_configuration3(&conf3));
-        //max_read();
+        read_max2();
         vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
