@@ -76,7 +76,7 @@ void app_main(void)
     init_configuration2(&conf2);
     init_configuration3(&conf3);
 
-    conf3.STRMCOUNT = 0b111;
+    conf3.STRMCOUNT = 0b000;
     conf3.STRMEN = 0b1;
     conf3.ADCEN = 0b0;
     conf3.STAMPEN = 0b1;

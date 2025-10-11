@@ -25,7 +25,9 @@ void printbin(char *data,int len){
 void read_max2(void) {
     i2s_chan_handle_t rx_handle = NULL;
     i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_SLAVE);
+    chan_cfg.auto_clear = true;
     int ret3 = i2s_new_channel(&chan_cfg, NULL, &rx_handle);
+
     while (ret3 != ESP_OK) printf("Nope no new channel %x", ret3);
     while (rx_handle == NULL) printf("RX Handle is null");
     // struct i2s_chan_config_t config = {
@@ -56,7 +58,7 @@ void read_max2(void) {
             .ws = Q1,
             .invert_flags = {
                 .mclk_inv = false,
-                .bclk_inv = true,
+                .bclk_inv = false,
                 .ws_inv = false,
             },
         },
@@ -70,11 +72,10 @@ void read_max2(void) {
     // while(ret2 != ESP_OK) printf("Error enabling %x\n",ret2);
 
     while(true){
-        int ret = i2s_channel_read(rx_handle, buf, 1024, &bytes_read, portMAX_DELAY);
+        int ret = i2s_channel_read(rx_handle, buf, 1024, &bytes_read, 200);
         if(ret != ESP_OK){
             printf("Error reading %d\n",ret);
         } else {
-            printf("Read %d bytes\n",(int)bytes_read);
             printbin(buf,bytes_read);
         }
         // memset(buf, 0, 128);

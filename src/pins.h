@@ -8,8 +8,8 @@
 #define LED_GREEN 16
 #define LED_ORANGE 17
 #define LED_RED 18
-#define I0 3
-#define I1 4
+#define I0 4
+#define I1 3
 #define Q0 5
 #define Q1 6
 #define CLKOUT 7
