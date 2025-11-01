@@ -22,7 +22,8 @@ void printbin(char *data,int len){
         printf("%02x ",(unsigned char)data[i]);
     }
 }
-void read_max2(void) {
+
+void read_max2(struct SharedOutput* output) {
     i2s_chan_handle_t rx_handle = NULL;
     i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_SLAVE);
     chan_cfg.auto_clear = true;
@@ -49,7 +50,7 @@ void read_max2(void) {
         //     .mclk_multiple = 256,
         //     .bclk_div = 8
         // },
-        .clk_cfg=I2S_STD_CLK_DEFAULT_CONFIG(48000),
+        .clk_cfg=I2S_STD_CLK_DEFAULT_CONFIG(100000),
         .gpio_cfg = {
             .mclk = I2S_GPIO_UNUSED,
             .dout = I2S_GPIO_UNUSED,
@@ -72,13 +73,8 @@ void read_max2(void) {
     // while(ret2 != ESP_OK) printf("Error enabling %x\n",ret2);
 
     while(true){
-        int ret = i2s_channel_read(rx_handle, buf, 1024, &bytes_read, 200);
-        if(ret != ESP_OK){
-            printf("Error reading %d\n",ret);
-        } else {
-            printbin(buf,bytes_read);
-        }
-        // memset(buf, 0, 128);
+        int ret = i2s_channel_read(rx_handle, output->output_buf[output->current_write_buf % OUTPUT_BUF_COUNT], OUTPUT_BUF_SIZE, &bytes_read, 200);
+        output->current_write_buf ++;
     }
     /* Have to stop the channel before deleting it */
     i2s_channel_disable(rx_handle);

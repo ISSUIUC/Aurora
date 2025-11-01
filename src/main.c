@@ -20,6 +20,11 @@
 #include "max_read.h"
 #include "max_read2.h"
 
+#include "shared_output.h"
+#include "printutil.h"
+
+struct SharedOutput output;
+
 void init_gpio(void) {
     // Init gpio
     gpio_set_direction(LED_RED, GPIO_MODE_OUTPUT);
@@ -34,7 +39,7 @@ void init_gpio(void) {
     gpio_set_level(LED_ORANGE, 0);
 }
 
-void app_main(void)
+void max_read_main(void)
 {
     init_gpio();
     gpio_set_level(LED_GREEN, 1);
@@ -85,12 +90,40 @@ void app_main(void)
     conf3.DATASYNCEN = 0b1;
     // // Now try writing to it?
     setup_max2769(handle);
+    max2769_write(handle, MAX2769_CONF3, encode_configuration3(&conf3));
     while (1) {
-        // Write strm start
-        // printf("aaa\n");
-        conf3.STRMEN = 0b1;
-        max2769_write(handle, MAX2769_CONF3, encode_configuration3(&conf3));
-        read_max2();
-        vTaskDelay(500 / portTICK_PERIOD_MS);
+        read_max2(&output);
+        // yield();
+    }
+}
+
+void print_task_main(void) {
+    while(1) {
+        while (output.current_read_buf > output.current_write_buf) {
+            vTaskDelay(1);
+        }
+        print_hex(output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT], OUTPUT_BUF_SIZE);
+        output.current_read_buf++;
+        vTaskDelay(1);
+    }
+}
+
+#define STACK_SIZE  8192
+
+void app_main() {
+    output.current_read_buf = 0;
+    output.current_write_buf = 0;
+
+    StaticTask_t max_read_task;
+    static unsigned char max_read_stack[STACK_SIZE];
+    xTaskCreateStaticPinnedToCore(((TaskFunction_t) max_read_main), "max_read", STACK_SIZE, NULL, tskIDLE_PRIORITY + 0xF, max_read_stack, &max_read_task, 0);
+    
+
+    StaticTask_t print_task;
+    static unsigned char print_task_stack[STACK_SIZE];
+    xTaskCreateStaticPinnedToCore(((TaskFunction_t) print_task_main), "print_task", STACK_SIZE, NULL, tskIDLE_PRIORITY + 0xF, print_task_stack, &print_task, 1);
+
+    while (1) {
+        vTaskDelay(1);
     }
 }
