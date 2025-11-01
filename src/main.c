@@ -90,6 +90,7 @@ void app_main(void)
         // printf("aaa\n");
         conf3.STRMEN = 0b1;
         max2769_write(handle, MAX2769_CONF3, encode_configuration3(&conf3));
+        // max_read();
         read_max2();
         vTaskDelay(500 / portTICK_PERIOD_MS);
     }
