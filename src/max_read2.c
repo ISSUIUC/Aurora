@@ -1,3 +1,4 @@
+#include "hal/i2s_types.h"
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 
 #include "max_read2.h"
@@ -5,6 +6,7 @@
 #include <stdio.h>
 #include "driver/i2s_common.h"
 #include "driver/i2s_std.h"
+#include "driver/i2s_pdm.h"
 #include "pins.h"
 #include "portmacro.h"
 
@@ -21,6 +23,7 @@ void printbin(char *data,int len){
     for(int i =0;i<len;i++){
         printf("%02x ",(unsigned char)data[i]);
     }
+    // printf("\n");
 }
 
 void read_max2(struct SharedOutput* output) {
@@ -50,7 +53,12 @@ void read_max2(struct SharedOutput* output) {
         //     .mclk_multiple = 256,
         //     .bclk_div = 8
         // },
-        .clk_cfg=I2S_STD_CLK_DEFAULT_CONFIG(100000),
+        .clk_cfg={
+            .sample_rate_hz = 100000,
+            .clk_src = I2S_CLK_SRC_PLL_160M,
+            .ext_clk_freq_hz = 0,
+            .mclk_multiple = I2S_MCLK_MULTIPLE_256
+        },
         .gpio_cfg = {
             .mclk = I2S_GPIO_UNUSED,
             .dout = I2S_GPIO_UNUSED,
@@ -64,6 +72,7 @@ void read_max2(struct SharedOutput* output) {
             },
         },
     };
+    std_cfg.slot_cfg.bit_order_lsb = true;
     /* Initialize the channel */
     int ret2 = i2s_channel_init_std_mode(rx_handle, &std_cfg);
     while(ret2 != ESP_OK) printf("Error init %x\n",ret2);
