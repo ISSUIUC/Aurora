@@ -9,6 +9,7 @@
 #include "driver/i2s_pdm.h"
 #include "pins.h"
 #include "portmacro.h"
+#include "driver/gpio.h"
 
 // #include "freertos/FreeRTOS.h"
 // #include "freertos/task.h"
@@ -84,6 +85,10 @@ void read_max2(struct SharedOutput* output) {
     while(true){
         int ret = i2s_channel_read(rx_handle, output->output_buf[output->current_write_buf % OUTPUT_BUF_COUNT], OUTPUT_BUF_SIZE, &bytes_read, 200);
         output->current_write_buf ++;
+        if (output->current_write_buf - output->current_read_buf >= 4) {
+            // Orange LED
+            gpio_set_level(LED_ORANGE, 1);
+        }
     }
     /* Have to stop the channel before deleting it */
     i2s_channel_disable(rx_handle);
