@@ -24,6 +24,7 @@
 #include "tinyusb.h"
 #include "tinyusb_cdc_acm.h"
 #include "tinyusb_default_config.h"
+#include "tinyusb_console.h"
 #include "printutil.h"
 
 #if TUD_OPT_HIGH_SPEED
@@ -86,7 +87,6 @@ void init_gpio(void) {
 
 void max_read_main(void)
 {
-    gpio_set_level(LED_GREEN, 1);
     spi_bus_config_t max_2769_serial_in = {
         .miso_io_num = -1, // We do not have master in for the MAX 2769
         .mosi_io_num = MOSI,
@@ -160,6 +160,7 @@ void app_main() {
     output.current_write_buf = 0;
 
     init_gpio();
+    gpio_set_level(LED_GREEN, 1);
 
     static const uint16_t cdc_desc_config_len = TUD_CONFIG_DESC_LEN + CFG_TUD_CDC * TUD_CDC_DESC_LEN;
     static const uint8_t cdc_desc_configuration[] = {
@@ -170,12 +171,14 @@ void app_main() {
 
     tinyusb_config_t tusb_cfg = TINYUSB_DEFAULT_CONFIG();
 
-    tusb_cfg.descriptor.device = &cdc_device_descriptor;
-    tusb_cfg.descriptor.full_speed_config = cdc_desc_configuration;
-    #if (TUD_OPT_HIGH_SPEED)
-    tusb_cfg.descriptor.qualifier = &device_qualifier;
-    tusb_cfg.descriptor.high_speed_config = cdc_desc_configuration;
-#endif // TUD_OPT_HIGH_SPEED
+//     tusb_cfg.descriptor.device = &cdc_device_descriptor;
+//     tusb_cfg.descriptor.full_speed_config = cdc_desc_configuration;
+//     #if (TUD_OPT_HIGH_SPEED)
+//     tusb_cfg.descriptor.qualifier = &device_qualifier;
+//     tusb_cfg.descriptor.high_speed_config = cdc_desc_configuration;
+// #endif // TUD_OPT_HIGH_SPEED
+
+    tinyusb_driver_install(&tusb_cfg);
 
     tinyusb_config_cdcacm_t acm_cfg = {
         .cdc_port = TINYUSB_CDC_ACM_0,
@@ -184,24 +187,22 @@ void app_main() {
         .callback_line_state_changed = NULL,
         .callback_line_coding_changed = NULL
     };
-    tinyusb_driver_install(&tusb_cfg);
-
     // Init CDC 0
     tinyusb_cdcacm_initialized(TINYUSB_CDC_ACM_0);
     tinyusb_cdcacm_init(&acm_cfg);
     tinyusb_cdcacm_initialized(TINYUSB_CDC_ACM_0);
 
-    // StaticTask_t max_read_task;
-    // static unsigned char max_read_stack[STACK_SIZE];
-    // xTaskCreateStaticPinnedToCore(((TaskFunction_t) max_read_main), "max_read", STACK_SIZE, NULL, tskIDLE_PRIORITY + 0xF, max_read_stack, &max_read_task, 0);
+    tinyusb_console_init(TINYUSB_CDC_ACM_0);
+    StaticTask_t max_read_task;
+    static unsigned char max_read_stack[STACK_SIZE];
+    xTaskCreateStaticPinnedToCore(((TaskFunction_t) max_read_main), "max_read", STACK_SIZE, NULL, tskIDLE_PRIORITY + 0xF, max_read_stack, &max_read_task, 0);
 
 
-    // StaticTask_t print_task;
-    // static unsigned char print_task_stack[STACK_SIZE];
-    // xTaskCreateStaticPinnedToCore(((TaskFunction_t) print_task_main), "print_task", STACK_SIZE, NULL, tskIDLE_PRIORITY + 0xF, print_task_stack, &print_task, 1);
+    StaticTask_t print_task;
+    static unsigned char print_task_stack[STACK_SIZE];
+    xTaskCreateStaticPinnedToCore(((TaskFunction_t) print_task_main), "print_task", STACK_SIZE, NULL, tskIDLE_PRIORITY + 0xF, print_task_stack, &print_task, 1);
 
     while (1) {
         vTaskDelay(1);
-        printf("Hello testing");
     }
 }
