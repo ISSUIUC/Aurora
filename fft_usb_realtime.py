@@ -63,17 +63,18 @@ def update(frame):
     # 1. Get raw data
     if MODE == 'usb':
         try:
-            data = ep_in.read(PACKET_SIZE, timeout=100)
+            data = ep_in.read(PACKET_SIZE)
             if len(data) == 0:
                 return [spec_img]
             data = np.frombuffer(data, dtype=np.uint8)
-            data_text = bytearray(data.tobytes())
-            if data_text[0] != 0x20 and data_text[1] == 0x20:
-                data_text[0] = 0x20
-            if data_text[-1] != 0x20 and data_text[-2] == 0x20:
-                data_text[-1] = 0x20
-            print(data_text)
-            data = bytes(data_text)
+            # data_text = bytearray(data.tobytes())
+            # # if data_text[0] != 0x20 and data_text[1] == 0x20:
+            # #     data_text[0] = 0x20
+            # # if data_text[-1] != 0x20 and data_text[-2] == 0x20:
+            # #     data_text[-1] = 0x20
+            # print(data_text)
+            # data = bytes(data_text)
+            # print(data)
         except usb.core.USBError:
             data = np.random.randint(0, 255, PACKET_SIZE, dtype=np.uint8)
     else:
@@ -85,9 +86,11 @@ def update(frame):
         data = ((samples > 0).astype(np.uint8)) * 255
 
     # 2. Convert to ±1 samples
-    bits = np.unpackbits(np.frombuffer(data_text,dtype=np.uint8),bitorder='big')
-    samples = bits * 2 - 1
+    # bits = np.unpackbits(np.frombuffer(data_text,dtype=np.uint8),bitorder='big')
+    bits = np.unpackbits(data,bitorder='big')
+    # print(*bits)
 
+    samples = (bits * 2 - 1).astype(np.int8)
     # 3. Compute PSD
     Pxx, freqs = plt.mlab.psd(samples, NFFT=NFFT, Fs=FS,noverlap=NFFT//2)
     Pxx_dB = 10 * np.log10(Pxx + 1e-12)
@@ -100,7 +103,8 @@ def update(frame):
     # 5. Update image
     spec_img.set_data(waterfall)
     spec_img.set_extent([0, FS / 2, time_counter - ROLL_LEN, time_counter])
-    ax.set_ylim((time_counter - ROLL_LEN, time_counter))
+    NFFT / FS
+    ax.set_ylim(((time_counter - ROLL_LEN) * NFFT / FS, time_counter* NFFT / FS))
     return [spec_img]
 
 # =============================
