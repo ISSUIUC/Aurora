@@ -89,7 +89,7 @@ void read_max2(struct SharedOutput* output) {
             // Orange LED
             gpio_set_level(LED_ORANGE, 1);
         }
-    }
+}
     /* Have to stop the channel before deleting it */
     i2s_channel_disable(rx_handle);
     /* If the handle is not needed any more, delete it to release the channel resources */

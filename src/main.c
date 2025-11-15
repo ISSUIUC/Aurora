@@ -142,14 +142,55 @@ void max_read_main(void)
 
 void print_task_main(void) {
     while(1) {
-        while (output.current_read_buf > output.current_write_buf) {
-            vTaskDelay(1);
+        // Wait for the producer (max_read_main) to give us a buffer
+        // This logic assumes current_write_buf is a counter of buffers filled
+        // and current_read_buf is a counter of buffers sent.
+        while (output.current_read_buf >= output.current_write_buf) {
+            // Wait for new data
+            vTaskDelay(pdMS_TO_TICKS(1)); 
         }
-        fwrite(output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT], sizeof(uint8_t), OUTPUT_BUF_SIZE, stdout);
-        // Ideally we should flush lol
-        // print_hex(output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT], OUTPUT_BUF_SIZE);
+
+        // Get the pointer to the next buffer to send
+        uint8_t* data_to_send = output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT];
+        uint32_t bytes_to_send = OUTPUT_BUF_SIZE;
+        uint32_t bytes_sent = 0;
+
+        // Wait until the USB host (PC) is connected and ready
+        while (!tud_cdc_n_connected(TINYUSB_CDC_ACM_0)) {
+            vTaskDelay(pdMS_TO_TICKS(10));
+            gpio_set_level(LED_RED, 1);
+        }
+        gpio_set_level(LED_RED, 0);
+
+        // Send the entire buffer, handling USB back-pressure
+        while (bytes_to_send > 0) {
+            // Check how much space is available in the USB TX buffer
+            uint32_t available_space = tud_cdc_n_write_available(TINYUSB_CDC_ACM_0);
+
+            if (available_space == 0) {
+                // USB TX buffer is full, wait and let the USB stack work
+                vTaskDelay(pdMS_TO_TICKS(1));
+                gpio_set_level(LED_BLUE, 1);
+                continue;
+            }
+            gpio_set_level(LED_BLUE, 0);
+
+            // Calculate how much we can send in this chunk
+            uint32_t chunk_size = (available_space < bytes_to_send) ? available_space : bytes_to_send;
+
+            // Write the chunk
+            uint32_t written = tud_cdc_n_write(TINYUSB_CDC_ACM_0, data_to_send + bytes_sent, chunk_size);
+
+            // Advance our counters
+            bytes_sent += written;
+            bytes_to_send -= written;
+
+            // After writing, we MUST flush to actually send the data
+            tud_cdc_n_write_flush(TINYUSB_CDC_ACM_0);
+        }
+
+        // We have sent the entire buffer, mark it as read
         output.current_read_buf++;
-        vTaskDelay(1);
     }
 }
 
@@ -164,19 +205,19 @@ void app_main() {
 
     static const uint16_t cdc_desc_config_len = TUD_CONFIG_DESC_LEN + CFG_TUD_CDC * TUD_CDC_DESC_LEN;
     static const uint8_t cdc_desc_configuration[] = {
-        TUD_CONFIG_DESCRIPTOR(1, 4, 0, cdc_desc_config_len, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
-        TUD_CDC_DESCRIPTOR(0, 4, 0x81, 8, 0x02, 0x82, (TUD_OPT_HIGH_SPEED ? 512 : 64)),
-        TUD_CDC_DESCRIPTOR(2, 4, 0x83, 8, 0x04, 0x84, (TUD_OPT_HIGH_SPEED ? 512 : 64)),
+        TUD_CONFIG_DESCRIPTOR(1, 2, 0, cdc_desc_config_len, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+        TUD_CDC_DESCRIPTOR(0, 4, 0x81, 8, 0x02, 0x82, (TUD_OPT_HIGH_SPEED ? 512 : 64))
     };
 
     tinyusb_config_t tusb_cfg = TINYUSB_DEFAULT_CONFIG();
 
-//     tusb_cfg.descriptor.device = &cdc_device_descriptor;
-//     tusb_cfg.descriptor.full_speed_config = cdc_desc_configuration;
-//     #if (TUD_OPT_HIGH_SPEED)
-//     tusb_cfg.descriptor.qualifier = &device_qualifier;
-//     tusb_cfg.descriptor.high_speed_config = cdc_desc_configuration;
-// #endif // TUD_OPT_HIGH_SPEED
+    tusb_cfg.descriptor.device = &cdc_device_descriptor;
+    tusb_cfg.descriptor.full_speed_config = cdc_desc_configuration;
+    #if (TUD_OPT_HIGH_SPEED)
+    #error "asdf"
+    tusb_cfg.descriptor.qualifier = &device_qualifier;
+    tusb_cfg.descriptor.high_speed_config = cdc_desc_configuration;
+#endif // TUD_OPT_HIGH_SPEED
 
     tinyusb_driver_install(&tusb_cfg);
 
@@ -192,7 +233,6 @@ void app_main() {
     tinyusb_cdcacm_init(&acm_cfg);
     tinyusb_cdcacm_initialized(TINYUSB_CDC_ACM_0);
 
-    tinyusb_console_init(TINYUSB_CDC_ACM_0);
     StaticTask_t max_read_task;
     static unsigned char max_read_stack[STACK_SIZE];
     xTaskCreateStaticPinnedToCore(((TaskFunction_t) max_read_main), "max_read", STACK_SIZE, NULL, tskIDLE_PRIORITY + 0xF, max_read_stack, &max_read_task, 0);
