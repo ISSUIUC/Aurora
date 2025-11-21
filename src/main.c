@@ -186,8 +186,8 @@ void print_task_main(void) {
             bytes_to_send -= written;
 
             // After writing, we MUST flush to actually send the data
-            tud_cdc_n_write_flush(TINYUSB_CDC_ACM_0);
         }
+        tud_cdc_n_write_flush(TINYUSB_CDC_ACM_0);
 
         // We have sent the entire buffer, mark it as read
         output.current_read_buf++;
@@ -240,7 +240,7 @@ void app_main() {
 
     StaticTask_t print_task;
     static unsigned char print_task_stack[STACK_SIZE];
-    xTaskCreateStaticPinnedToCore(((TaskFunction_t) print_task_main), "print_task", STACK_SIZE, NULL, tskIDLE_PRIORITY + 0xF, print_task_stack, &print_task, 1);
+    xTaskCreateStaticPinnedToCore(((TaskFunction_t) print_task_main), "print_task", STACK_SIZE, NULL, configMAX_PRIORITIES - 1, print_task_stack, &print_task, 1);
 
     while (1) {
         vTaskDelay(1);
