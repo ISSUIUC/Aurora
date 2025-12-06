@@ -106,21 +106,25 @@ avg = []
 def reading_thread():
     global usb_data_queue
     while True:
-        start = time.time()
-        data = ep_in.read(PACKET_SIZE, timeout=1000)
-        end = time.time()
-        if not (end - start == 0):
-            rate = len(data) / (end - start)
-            print(f"Data read: {end - start}: {rate} bytes per second {rate / 125000} Mbps")
-        if len(data) == 0:
-            continue
-            # return [spec_img]
-        data = np.frombuffer(data, dtype=np.uint8)
-        bits = np.unpackbits(data,bitorder='big')
-    # print(*bits)
-        samples = (bits * 2 - 1).astype(np.int8)
-        # print(samples)
-        usb_data_queue.put_nowait(samples)
+        try:
+            start = time.time()
+            data = ep_in.read(PACKET_SIZE, timeout=1000)
+            end = time.time()
+            if not (end - start == 0):
+                rate = len(data) / (end - start)
+                print(f"Data read: {end - start}: {rate} bytes per second {rate / 125000} Mbps")
+            if len(data) == 0:
+                continue
+                # return [spec_img]
+            data = np.frombuffer(data, dtype=np.uint8)
+            bits = np.unpackbits(data,bitorder='big')
+
+            samples = (bits * 2 - 1).astype(np.int8)
+            # print(samples)
+            usb_data_queue.put_nowait(samples)
+        except Exception as e:
+            print("Fail...", str(e))
+
 def update(frame):
     global waterfall, time_counter
     time_counter += 1
