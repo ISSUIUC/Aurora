@@ -103,8 +103,8 @@ def update(frame):
     # 5. Update image
     spec_img.set_data(waterfall)
     spec_img.set_extent([0, FS / 2, time_counter - ROLL_LEN, time_counter])
-    NFFT / FS
-    ax.set_ylim(((time_counter - ROLL_LEN) * NFFT / FS, time_counter* NFFT / FS))
+    # NFFT / FS
+    # ax.set_ylim(((time_counter - ROLL_LEN) * NFFT / FS, time_counter* NFFT / FS))
     return [spec_img]
 
 # =============================
