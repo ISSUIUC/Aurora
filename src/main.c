@@ -31,6 +31,7 @@
     #warn "TUD OPT HIGH SPEED"
 #endif
 
+QueueHandle_t usb_tx_queue;
 static const tusb_desc_device_t cdc_device_descriptor = {
     .bLength = sizeof(cdc_device_descriptor),
     .bDescriptorType = TUSB_DESC_DEVICE,
@@ -140,18 +141,90 @@ void max_read_main(void)
     }
 }
 
+// void print_task_main(void *pvParameters) {
+//     uint32_t buf_idx;
+
+//     // Wait for connection initially
+//     while (!tud_cdc_n_connected(TINYUSB_CDC_ACM_0)) {
+//         vTaskDelay(pdMS_TO_TICKS(10));
+//     }
+
+//     while (1) {
+//         // This line blocks the task and lets TinyUSB run!
+//         // It will wake up the instant xQueueSend is called in the other task.
+//         if (xQueueReceive(usb_tx_queue, &buf_idx, portMAX_DELAY)) {
+            
+//             uint8_t* data_to_send = output.output_buf[buf_idx];
+//             size_t bytes_remaining = OUTPUT_BUF_SIZE;
+//             size_t offset = 0;
+
+//             while (bytes_remaining > 0) {
+//                 size_t space = tud_cdc_n_write_available(TINYUSB_CDC_ACM_0);
+                
+//                 if (space > 0) {
+//                     size_t chunk = (bytes_remaining < space) ? bytes_remaining : space;
+//                     tud_cdc_n_write(TINYUSB_CDC_ACM_0, data_to_send + offset, chunk);
+                    
+//                     bytes_remaining -= chunk;
+//                     offset += chunk;
+//                     tud_cdc_n_write_flush(TINYUSB_CDC_ACM_0);
+//                 } else {
+//                     // If the USB FIFO is full, yield for just 1 tick to let 
+//                     // the hardware clear. This prevents the "device not detected" error.
+//                     vTaskDelay(1); 
+//                 }
+//             }
+//         }
+//     }
+// }
+
 void print_task_main(void) {
     while(1) {
         while (output.current_read_buf > output.current_write_buf) {
-            vTaskDelay(1);
+            taskYIELD();
         }
-        fwrite(output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT], sizeof(uint8_t), OUTPUT_BUF_SIZE, stdout);
+        tinyusb_cdcacm_write_queue(
+            TINYUSB_CDC_ACM_0,
+            output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT],
+            OUTPUT_BUF_SIZE
+        );
+
         // Ideally we should flush lol
         // print_hex(output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT], OUTPUT_BUF_SIZE);
         output.current_read_buf++;
-        vTaskDelay(1);
+        taskYIELD();
     }
 }
+
+// void print_task_main(void) {
+//     while (1) {
+
+//         //wait until data exists
+//         while (output.current_read_buf == output.current_write_buf) {
+//             taskYIELD();
+//         }
+
+//         uint8_t *buf = output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT];
+
+//         //wait until usb has space
+//         while (tud_cdc_n_write_available(TINYUSB_CDC_ACM_0) < OUTPUT_BUF_SIZE) {
+//             taskYIELD();
+//         }
+
+//         tinyusb_cdcacm_write_queue(
+//             TINYUSB_CDC_ACM_0,
+//             buf,
+//             OUTPUT_BUF_SIZE
+//         );
+
+//         //flush call
+//         tinyusb_cdcacm_write_flush(TINYUSB_CDC_ACM_0, 0);
+
+//         output.current_read_buf++;
+//         vTaskDelay(1);
+//     }
+// }
+
 
 #define STACK_SIZE  8192
 
@@ -171,6 +244,7 @@ void app_main() {
 
     tinyusb_config_t tusb_cfg = TINYUSB_DEFAULT_CONFIG();
 
+    usb_tx_queue = xQueueCreate(OUTPUT_BUF_COUNT, sizeof(uint32_t));
 //     tusb_cfg.descriptor.device = &cdc_device_descriptor;
 //     tusb_cfg.descriptor.full_speed_config = cdc_desc_configuration;
 //     #if (TUD_OPT_HIGH_SPEED)
