@@ -31,7 +31,6 @@
     #warn "TUD OPT HIGH SPEED"
 #endif
 
-QueueHandle_t usb_tx_queue;
 static const tusb_desc_device_t cdc_device_descriptor = {
     .bLength = sizeof(cdc_device_descriptor),
     .bDescriptorType = TUSB_DESC_DEVICE,
@@ -179,19 +178,26 @@ void max_read_main(void)
 // }
 
 void print_task_main(void) {
+    uint8_t buf[OUTPUT_BUF_SIZE];
+    for (int i = 0; i < OUTPUT_BUF_SIZE; i++) {
+        buf[i] = (uint8_t) i % 256;
+    }
     while(1) {
-        while (output.current_read_buf > output.current_write_buf) {
-            taskYIELD();
-        }
-        tinyusb_cdcacm_write_queue(
+        // while (output.current_read_buf > output.current_write_buf) {
+        //     vTaskDelay(1);
+        // }
+        tud_cdc_n_write(
             TINYUSB_CDC_ACM_0,
-            output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT],
+            buf,
             OUTPUT_BUF_SIZE
         );
+        tud_cdc_n_write_flush(TINYUSB_CDC_ACM_0);
+
+        //output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT]
 
         // Ideally we should flush lol
         // print_hex(output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT], OUTPUT_BUF_SIZE);
-        output.current_read_buf++;
+        // output.current_read_buf++;
         taskYIELD();
     }
 }
@@ -244,7 +250,7 @@ void app_main() {
 
     tinyusb_config_t tusb_cfg = TINYUSB_DEFAULT_CONFIG();
 
-    usb_tx_queue = xQueueCreate(OUTPUT_BUF_COUNT, sizeof(uint32_t));
+    // usb_tx_queue = xQueueCreate(OUTPUT_BUF_COUNT, sizeof(uint32_t));
 //     tusb_cfg.descriptor.device = &cdc_device_descriptor;
 //     tusb_cfg.descriptor.full_speed_config = cdc_desc_configuration;
 //     #if (TUD_OPT_HIGH_SPEED)
@@ -274,7 +280,7 @@ void app_main() {
 
     StaticTask_t print_task;
     static unsigned char print_task_stack[STACK_SIZE];
-    xTaskCreateStaticPinnedToCore(((TaskFunction_t) print_task_main), "print_task", STACK_SIZE, NULL, tskIDLE_PRIORITY + 0xF, print_task_stack, &print_task, 1);
+    xTaskCreateStaticPinnedToCore(((TaskFunction_t) print_task_main), "print_task", STACK_SIZE, NULL, tskIDLE_PRIORITY + 0x5, print_task_stack, &print_task, 1);
 
     while (1) {
         vTaskDelay(1);

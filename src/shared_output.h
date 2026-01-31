@@ -12,5 +12,5 @@ struct SharedOutput {
     uint32_t current_write_buf;
 };
 
-static QueueHandle_t usb_tx_queue;
+// static QueueHandle_t usb_tx_queue;
 #endif // __SHARED_OUTPUT_H__
