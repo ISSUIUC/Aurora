@@ -183,21 +183,18 @@ void print_task_main(void) {
         buf[i] = (uint8_t) i % 256;
     }
     while(1) {
-        // while (output.current_read_buf > output.current_write_buf) {
-        //     vTaskDelay(1);
-        // }
+        while (output.current_read_buf > output.current_write_buf) {
+            taskYIELD();
+        }
         tud_cdc_n_write(
             TINYUSB_CDC_ACM_0,
-            buf,
+            output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT],
             OUTPUT_BUF_SIZE
         );
         tud_cdc_n_write_flush(TINYUSB_CDC_ACM_0);
-
-        //output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT]
-
         // Ideally we should flush lol
         // print_hex(output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT], OUTPUT_BUF_SIZE);
-        // output.current_read_buf++;
+        output.current_read_buf++;
         taskYIELD();
     }
 }

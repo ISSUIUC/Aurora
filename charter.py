@@ -4,6 +4,7 @@ import pandas as pd
 df = pd.read_csv("timings.csv")
 df2 = pd.read_csv("timings2.csv")
 
+print(df["time"][0] - df["time"].iloc[-1])
 print(sum(df["bytes"]) / (df["time"][0] - df["time"].iloc[-1]))
 print(sum(df2["bytes"]) / (df2["time"][0] - df2["time"].iloc[-1]))
 plt.plot(df["time"] - df["time"][0], df["speed"]/1000)
