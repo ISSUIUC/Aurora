@@ -93,6 +93,21 @@ void read_max2(struct SharedOutput* output) {
             // Orange LED
             gpio_set_level(LED_ORANGE, 1);
         }
+
+
+        uint8_t *buf = output->buffers[buf];
+        xQueueSend(output->buf_queue, &buf, portMAX_DELAY);
+
+        if (uxQueueSpacesAvailable(output->buf_queue) == 0) {
+            // Turn off orange LED
+            gpio_set_level(LED_ORANGE, 1);
+        } else {
+            // Turn on orange LED
+            gpio_set_level(LED_ORANGE, 0);
+        }
+
+        buf = (buf + 1) % OUTPUT_BUF_COUNT;
+
     }
     /* Have to stop the channel before deleting it */
     i2s_channel_disable(rx_handle);
