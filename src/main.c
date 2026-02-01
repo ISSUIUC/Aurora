@@ -182,15 +182,27 @@ void print_task_main(void) {
     for (int i = 0; i < OUTPUT_BUF_SIZE; i++) {
         buf[i] = (uint8_t) i % 256;
     }
+
+    uint8_t *buf;
+
     while(1) {
         while (output.current_read_buf > output.current_write_buf) {
             taskYIELD();
         }
+
+        xQueueReceive(output.buf_queue, &buf, portMAX_DELAY);
+
         tud_cdc_n_write(
             TINYUSB_CDC_ACM_0,
-            output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT],
+            buf,
             OUTPUT_BUF_SIZE
         );
+
+        // tud_cdc_n_write(
+        //     TINYUSB_CDC_ACM_0,
+        //     output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT],
+        //     OUTPUT_BUF_SIZE
+        // );
         tud_cdc_n_write_flush(TINYUSB_CDC_ACM_0);
         // Ideally we should flush lol
         // print_hex(output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT], OUTPUT_BUF_SIZE);
@@ -234,6 +246,9 @@ void print_task_main(void) {
 void app_main() {
     output.current_read_buf = 0;
     output.current_write_buf = 0;
+
+    output.buf_queue = xQueueCreate(OUTPUT_BUF_COUNT, sizeof(uint32_t));
+    configASSERT(output.buf_queue != NULL);
 
     init_gpio();
     gpio_set_level(LED_GREEN, 1);
