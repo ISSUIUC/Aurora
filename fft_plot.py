@@ -2,9 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 data = np.fromfile("output.bin", dtype=np.uint8)
-
-print(data[:1000])
-
+# data = data[120238464:]
+# int(4e6 * 12.5)
 # # print((data[1:] - data[:-1])[:1000])
 # plt.hist(data[1:] - data[:-1], bins=255)
 # # plt.scatter(range(0, len(data[:-1])), data[:-1] - data[1:])

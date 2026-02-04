@@ -115,7 +115,7 @@ void app_main() {
 
     StaticTask_t print_task;
     static unsigned char print_task_stack[STACK_SIZE];
-    xTaskCreateStaticPinnedToCore(((TaskFunction_t) print_task_main), "print_task", STACK_SIZE, NULL, tskIDLE_PRIORITY + 0x5, print_task_stack, &print_task, 1);
+    xTaskCreateStaticPinnedToCore(((TaskFunction_t) print_task_main), "print_task", STACK_SIZE, (void* const) &output, tskIDLE_PRIORITY + 0x5, print_task_stack, &print_task, 1);
 
     while (1) {
         vTaskDelay(1);
