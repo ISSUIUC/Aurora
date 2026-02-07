@@ -15,11 +15,13 @@ bool setup_max2769(spi_device_handle_t handle) {
     conf2.IQEN = 0;
     conf2.FORMAT = 0b10;
     conf2.BITS = 0b100;
+
     conf3.STRMCOUNT = 0b000;
     conf3.STRMEN = 0b1;
     conf3.STAMPEN = 0b1;
     conf3.TIMESYNCEN = 0b0;
     conf3.DATASYNCEN = 0b0;
+    // 4mhz
     pll_config.REFDIV = 0b01;
     clock_fractional_div_ratio.SERCLK  = 0b0;
 

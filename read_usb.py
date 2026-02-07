@@ -28,8 +28,8 @@ ep_in = usb.util.find_descriptor(
     custom_match=lambda e: usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_IN 
 )
 
-# csv_log = open("timings.csv", "w")
-# csv_log.write("time,speed,bytes\n")
+csv_log = open("timings.csv", "w")
+csv_log.write("time,speed,bytes\n")
 def update():
     try:
         start = time.time()
@@ -38,7 +38,7 @@ def update():
         if start != end:
             rate = len(data) / (end - start)
             print(f"{rate:.2f} bytes/s", end="\r")
-            # csv_log.write(f"{end},{len(data) / (end - start)},{len(data)}\n")
+            csv_log.write(f"{end},{len(data) / (end - start)},{len(data)}\n")
 
         data = np.frombuffer(data, dtype=np.uint8)
     except usb.core.USBError:
