@@ -12,7 +12,7 @@ bool setup_max2769(spi_device_handle_t handle) {
     init_configuration3(&conf3);
     init_pllconfiguration(&pll_config);
     init_clockfractionaldivisionratio(&clock_fractional_div_ratio);
-    conf2.IQEN = 0;
+    conf2.IQEN = 1;
     conf2.FORMAT = 0b10;
     conf2.BITS = 0b100;
 
