@@ -10,10 +10,10 @@ data = np.fromfile("output.bin", dtype=np.uint8)
 # plt.show()
 bits = np.unpackbits(data, bitorder='big')
 
-array = (bits.astype(np.int8) * 2 - 1)
+array = (bits.astype(np.int8) * 2 - 1) * 64
 # Now separate into i and q
 samples = array[::2] + array[1::2] * 1j
-print(np.sum(bits[1::2]) / len(bits[2::2]))
+# print(np.sum(bits[1::2]) / len(bits[2::2]))
 print(samples.shape)
 sample_rate = 4e6
 
@@ -43,15 +43,35 @@ windowed_samples = samples_trimmed * window
 # Using axis=1 processes all rows simultaneously
 fft_data = np.fft.fft(windowed_samples, axis=1)
 fft_data = np.fft.fftshift(fft_data, axes=1)
+center_idx = fft_size // 2
+mask_width = 5 # This will mask 5 bins on either side of center (11 bins total)
 
-# 4. Convert to Power (dB)
-spectrogram = 10 * np.log10(np.abs(fft_data)**2 + 1e-12)
+# 2. Apply the mask to the FFT data (setting power to a very low value)
+# We do this on a copy to keep the original data intact if needed
+fft_data_masked = fft_data.copy()
+fft_data_masked[:, center_idx - mask_width : center_idx + mask_width + 1] = 1e-12
 
-# 5. Plotting
+# 3. Convert to Power (dB) using the masked data
+spectrogram = 10 * np.log10(np.abs(fft_data_masked)**2 + 1e-12)
+
+# 4. Find the peak indices from the masked spectrogram
+peak_indices = np.argmax(spectrogram, axis=1)
+
+# 5. Map to frequency and plot
+freq_axis = np.linspace(sample_rate/-2/1e6, sample_rate/2/1e6, fft_size)
+time_axis = np.linspace(0, len(samples)/sample_rate, num_rows)
+peak_freqs = freq_axis[peak_indices]
+
+# 4. Plotting
 plt.figure(figsize=(10, 6))
+
+# Plot the spectrogram
 otp = plt.imshow(spectrogram, aspect='auto', 
-                 extent=[sample_rate/-2/1e6, sample_rate/2/1e6, len(samples)/sample_rate, 0],
-                 cmap='viridis') # 'viridis' or 'magma' often look better for SDR data
+                 extent=[freq_axis[0], freq_axis[-1], time_axis[-1], time_axis[0]],
+                 cmap='viridis')
+
+# Overlay the peak frequency in red
+plt.plot(peak_freqs, time_axis, color='red', linewidth=1, label='Highest Peak')
 plt.colorbar(otp, label='Power [dB]')
 plt.xlabel('Frequency [MHz]')
 plt.ylabel('Time [s]')

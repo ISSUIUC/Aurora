@@ -77,11 +77,7 @@ void max_read_main(void)
     struct Configuration1 conf1;
     struct Configuration2 conf2;
     struct Configuration3 conf3;
-
-    init_configuration1(&conf1);
-    init_configuration2(&conf2);
     init_configuration3(&conf3);
-
     conf3.STRMCOUNT = 0b000;
     conf3.STRMEN = 0b1;
     conf3.ADCEN = 0b1;
@@ -90,7 +86,8 @@ void max_read_main(void)
     conf3.STAMPEN = 0b0;
     conf3.TIMESYNCEN = 0b0;
     conf3.STRMSTART = 0b1;
-    conf3.DATASYNCEN = 0b1;
+    conf3.DATASYNCEN = 0b0;
+
     // // Now try writing to it?
     setup_max2769(handle);
     max2769_write(handle, MAX2769_CONF3, encode_configuration3(&conf3));
