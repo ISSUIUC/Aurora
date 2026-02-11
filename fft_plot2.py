@@ -15,7 +15,8 @@ vec_map = data > avg
 data[vec_map] = 1
 data[~vec_map] = 0
 bits = data
-array = (bits.astype(np.int8) * 2 - 1)
+array = (bits.astype(np.int8) * 2 - 1) * 64
+array += (np.random.normal(size=array.shape) * 59).astype(np.int8)
 # Now separate into i and q
 samples = array[::2] + array[1::2] * 1j
 print(samples.shape)

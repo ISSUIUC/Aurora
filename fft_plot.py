@@ -10,7 +10,7 @@ data = np.fromfile("output.bin", dtype=np.uint8)
 # plt.show()
 bits = np.unpackbits(data, bitorder='big')
 
-array = (bits.astype(np.int8) * 2 - 1) * 64
+array = ((bits.astype(np.int8) * 2 - 1) * 64).astype(np.float64)
 # Now separate into i and q
 samples = array[::2] + array[1::2] * 1j
 # print(np.sum(bits[1::2]) / len(bits[2::2]))
