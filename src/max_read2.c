@@ -82,33 +82,33 @@ void read_max2(struct SharedOutput* output) {
     i2s_channel_enable(rx_handle);
     // while(ret2 != ESP_OK) printf("Error enabling %x\n",ret2);
 
-    while(true){
-        int ret = i2s_channel_read(rx_handle, output->output_buf[output->current_write_buf % OUTPUT_BUF_COUNT], OUTPUT_BUF_SIZE, &bytes_read, 200);
-        output->current_write_buf ++;
+    while (true) {
 
-        // // Inside your producer loop, after filling a buffer:
-        // uint32_t buffer_index = output->current_write_buf % OUTPUT_BUF_COUNT;
-        // xQueueSend(usb_tx_queue, &buffer_index, 0); // Push to queue, don't wait if full
-        if (output->current_write_buf - output->current_read_buf >= 4) {
-            // Orange LED
-            gpio_set_level(LED_ORANGE, 1);
+        uint32_t buffer_index = output->current_write_buf % OUTPUT_BUF_COUNT;
+
+        int ret = i2s_channel_read(
+            rx_handle,
+            output->output_buf[buffer_index],
+            OUTPUT_BUF_SIZE,
+            &bytes_read,
+            200
+        );
+
+        if (ret == ESP_OK) {
+
+            // Push index to queue (block if full)
+            xQueueSend(output->buf_queue, &buffer_index, portMAX_DELAY);
+
+            output->current_write_buf++;
+
+            if (output->current_write_buf - output->current_read_buf >= OUTPUT_BUF_COUNT) {
+                gpio_set_level(LED_ORANGE, 1);
+            } else {
+                gpio_set_level(LED_ORANGE, 0);
+            }
         }
-
-
-        uint8_t *buf = output->buffers[buf];
-        xQueueSend(output->buf_queue, &buf, portMAX_DELAY);
-
-        if (uxQueueSpacesAvailable(output->buf_queue) == 0) {
-            // Turn off orange LED
-            gpio_set_level(LED_ORANGE, 1);
-        } else {
-            // Turn on orange LED
-            gpio_set_level(LED_ORANGE, 0);
-        }
-
-        buf = (buf + 1) % OUTPUT_BUF_COUNT;
-
     }
+
     /* Have to stop the channel before deleting it */
     i2s_channel_disable(rx_handle);
     /* If the handle is not needed any more, delete it to release the channel resources */

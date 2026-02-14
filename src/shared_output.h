@@ -10,6 +10,8 @@ struct SharedOutput {
 
     uint32_t current_read_buf;
     uint32_t current_write_buf;
+
+    QueueHandle_t buf_queue;
 };
 
 // static QueueHandle_t usb_tx_queue;

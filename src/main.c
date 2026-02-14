@@ -177,20 +177,55 @@ void max_read_main(void)
 //     }
 // }
 
+// void print_task_main(void) {
+//     uint8_t buf[OUTPUT_BUF_SIZE];
+//     for (int i = 0; i < OUTPUT_BUF_SIZE; i++) {
+//         buf[i] = (uint8_t) i % 256;
+//     }
+
+//     uint8_t *buf;
+
+//     while(1) {
+//         while (output.current_read_buf > output.current_write_buf) {
+//             taskYIELD();
+//         }
+
+//         xQueueReceive(output.buf_queue, &buf, portMAX_DELAY);
+
+//         tud_cdc_n_write(
+//             TINYUSB_CDC_ACM_0,
+//             buf,
+//             OUTPUT_BUF_SIZE
+//         );
+
+//         // tud_cdc_n_write(
+//         //     TINYUSB_CDC_ACM_0,
+//         //     output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT],
+//         //     OUTPUT_BUF_SIZE
+//         // );
+//         tud_cdc_n_write_flush(TINYUSB_CDC_ACM_0);
+//         // Ideally we should flush lol
+//         // print_hex(output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT], OUTPUT_BUF_SIZE);
+//         output.current_read_buf++;
+//         taskYIELD();
+//     }
+// }
+
 void print_task_main(void) {
-    uint8_t buf[OUTPUT_BUF_SIZE];
-    for (int i = 0; i < OUTPUT_BUF_SIZE; i++) {
-        buf[i] = (uint8_t) i % 256;
-    }
 
-    uint8_t *buf;
+    uint32_t buffer_index;
 
-    while(1) {
-        while (output.current_read_buf > output.current_write_buf) {
+    while (1) {
+
+        // Wait for next filled buffer index
+        xQueueReceive(output.buf_queue, &buffer_index, portMAX_DELAY);
+
+        uint8_t *buf = output.output_buf[buffer_index];
+
+        // Wait until USB has space
+        while (tud_cdc_n_write_available(TINYUSB_CDC_ACM_0) < OUTPUT_BUF_SIZE) {
             taskYIELD();
         }
-
-        xQueueReceive(output.buf_queue, &buf, portMAX_DELAY);
 
         tud_cdc_n_write(
             TINYUSB_CDC_ACM_0,
@@ -198,47 +233,12 @@ void print_task_main(void) {
             OUTPUT_BUF_SIZE
         );
 
-        // tud_cdc_n_write(
-        //     TINYUSB_CDC_ACM_0,
-        //     output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT],
-        //     OUTPUT_BUF_SIZE
-        // );
         tud_cdc_n_write_flush(TINYUSB_CDC_ACM_0);
-        // Ideally we should flush lol
-        // print_hex(output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT], OUTPUT_BUF_SIZE);
+
         output.current_read_buf++;
-        taskYIELD();
     }
 }
 
-// void print_task_main(void) {
-//     while (1) {
-
-//         //wait until data exists
-//         while (output.current_read_buf == output.current_write_buf) {
-//             taskYIELD();
-//         }
-
-//         uint8_t *buf = output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT];
-
-//         //wait until usb has space
-//         while (tud_cdc_n_write_available(TINYUSB_CDC_ACM_0) < OUTPUT_BUF_SIZE) {
-//             taskYIELD();
-//         }
-
-//         tinyusb_cdcacm_write_queue(
-//             TINYUSB_CDC_ACM_0,
-//             buf,
-//             OUTPUT_BUF_SIZE
-//         );
-
-//         //flush call
-//         tinyusb_cdcacm_write_flush(TINYUSB_CDC_ACM_0, 0);
-
-//         output.current_read_buf++;
-//         vTaskDelay(1);
-//     }
-// }
 
 
 #define STACK_SIZE  8192
@@ -253,12 +253,12 @@ void app_main() {
     init_gpio();
     gpio_set_level(LED_GREEN, 1);
 
-    static const uint16_t cdc_desc_config_len = TUD_CONFIG_DESC_LEN + CFG_TUD_CDC * TUD_CDC_DESC_LEN;
-    static const uint8_t cdc_desc_configuration[] = {
-        TUD_CONFIG_DESCRIPTOR(1, 4, 0, cdc_desc_config_len, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
-        TUD_CDC_DESCRIPTOR(0, 4, 0x81, 8, 0x02, 0x82, (TUD_OPT_HIGH_SPEED ? 512 : 64)),
-        TUD_CDC_DESCRIPTOR(2, 4, 0x83, 8, 0x04, 0x84, (TUD_OPT_HIGH_SPEED ? 512 : 64)),
-    };
+    // static const uint16_t cdc_desc_config_len = TUD_CONFIG_DESC_LEN + CFG_TUD_CDC * TUD_CDC_DESC_LEN;
+    // static const uint8_t cdc_desc_configuration[] = {
+    //     TUD_CONFIG_DESCRIPTOR(1, 4, 0, cdc_desc_config_len, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+    //     TUD_CDC_DESCRIPTOR(0, 4, 0x81, 8, 0x02, 0x82, (TUD_OPT_HIGH_SPEED ? 512 : 64)),
+    //     TUD_CDC_DESCRIPTOR(2, 4, 0x83, 8, 0x04, 0x84, (TUD_OPT_HIGH_SPEED ? 512 : 64)),
+    // };
 
     tinyusb_config_t tusb_cfg = TINYUSB_DEFAULT_CONFIG();
 
