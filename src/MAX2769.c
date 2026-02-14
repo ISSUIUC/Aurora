@@ -12,16 +12,19 @@ bool setup_max2769(spi_device_handle_t handle) {
     init_configuration3(&conf3);
     init_pllconfiguration(&pll_config);
     init_clockfractionaldivisionratio(&clock_fractional_div_ratio);
-    conf2.IQEN = 0;
+    conf2.IQEN = 1;
     conf2.FORMAT = 0b10;
-    conf2.BITS = 0b100;
+    conf2.BITS = 0b010;
+
     conf3.STRMCOUNT = 0b000;
     conf3.STRMEN = 0b1;
     conf3.STAMPEN = 0b1;
     conf3.TIMESYNCEN = 0b0;
     conf3.DATASYNCEN = 0b0;
-    pll_config.REFDIV = 0b01;
+    // 8mhz
+    pll_config.REFDIV = 0b10;
     clock_fractional_div_ratio.SERCLK  = 0b0;
+    clock_fractional_div_ratio.ADCCLK  = 0b1;
 
     spi_device_acquire_bus(handle, portMAX_DELAY);
 

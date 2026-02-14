@@ -1,0 +1,96 @@
+#include "usboutput.h"
+#include "tinyusb.h"
+#include "tinyusb_cdc_acm.h"
+#include "tinyusb_default_config.h"
+#include "tinyusb_console.h"
+
+#include "shared_output.h"
+
+static const tusb_desc_device_t cdc_device_descriptor = {
+    .bLength = sizeof(cdc_device_descriptor),
+    .bDescriptorType = TUSB_DESC_DEVICE,
+    .bcdUSB = 0x0200,
+    .bDeviceClass = TUSB_CLASS_MISC,
+    .bDeviceSubClass = MISC_SUBCLASS_COMMON,
+    .bDeviceProtocol = MISC_PROTOCOL_IAD,
+    .bMaxPacketSize0 = CFG_TUD_ENDPOINT0_SIZE,
+    .idVendor = 0x0155,
+    .idProduct = 0xa40a,
+    .bcdDevice = 0x0100,
+    .iManufacturer = 0x01,
+    .iProduct = 0x02,
+    .iSerialNumber = 0x01,
+    .bNumConfigurations = 0x01
+};
+
+
+
+#if (TUD_OPT_HIGH_SPEED)
+static const tusb_desc_device_qualifier_t device_qualifier = {
+    .bLength = sizeof(tusb_desc_device_qualifier_t),
+    .bDescriptorType = TUSB_DESC_DEVICE_QUALIFIER,
+    .bcdUSB = 0x0200,
+    .bDeviceClass = TUSB_CLASS_MISC,
+    .bDeviceSubClass = MISC_SUBCLASS_COMMON,
+    .bDeviceProtocol = MISC_PROTOCOL_IAD,
+    .bMaxPacketSize0 = CFG_TUD_ENDPOINT0_SIZE,
+    .bNumConfigurations = 0x01,
+    .bReserved = 0
+};
+#endif
+
+
+static void tinyusb_cdc_rx_callback(int itf, cdcacm_event_t *event)
+{
+}
+
+void init_usb() {
+    tinyusb_config_t tusb_cfg = TINYUSB_DEFAULT_CONFIG();
+
+    tinyusb_driver_install(&tusb_cfg);
+
+    tinyusb_config_cdcacm_t acm_cfg = {
+        .cdc_port = TINYUSB_CDC_ACM_0,
+        .callback_rx = &tinyusb_cdc_rx_callback,
+        .callback_rx_wanted_char = NULL,
+        .callback_line_state_changed = NULL,
+        .callback_line_coding_changed = NULL
+    };
+    // Init CDC 0
+    tinyusb_cdcacm_init(&acm_cfg);
+    tinyusb_console_init(TINYUSB_CDC_ACM_0);
+}
+
+
+
+
+void print_task_main(void* const params) {
+    struct SharedOutput* output = (struct SharedOutput*) params;
+
+    uint32_t buffer_index;
+
+    while (1) {
+
+        // Wait for next filled buffer index
+        xQueueReceive(output->buf_queue, &buffer_index, portMAX_DELAY);
+
+        uint8_t *buf = output->output_buf[buffer_index];
+
+        // Wait until USB has space
+        while (tud_cdc_n_write_available(TINYUSB_CDC_ACM_0) < OUTPUT_BUF_SIZE) {
+            taskYIELD();
+        }
+
+        tud_cdc_n_write(
+            TINYUSB_CDC_ACM_0,
+            buf,
+            OUTPUT_BUF_SIZE
+        );
+
+        tud_cdc_n_write_flush(TINYUSB_CDC_ACM_0);
+
+        output->current_read_buf++;
+        taskYIELD();
+
+    }
+}

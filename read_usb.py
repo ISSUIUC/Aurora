@@ -36,7 +36,8 @@ def update():
         data = ep_in.read(PACKET_SIZE, 10000)
         end = time.time()
         if start != end:
-            print(len(data) / (end - start), "bytes/s", len(data))
+            rate = len(data) / (end - start)
+            print(f"{rate:.2f} bytes/s", end="\r")
             csv_log.write(f"{end},{len(data) / (end - start)},{len(data)}\n")
 
         data = np.frombuffer(data, dtype=np.uint8)
