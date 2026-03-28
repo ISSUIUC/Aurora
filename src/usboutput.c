@@ -3,8 +3,10 @@
 #include "tinyusb_cdc_acm.h"
 #include "tinyusb_default_config.h"
 #include "tinyusb_console.h"
-
+#include "pins.h"
 #include "shared_output.h"
+#include "driver/gpio.h"
+
 
 static const tusb_desc_device_t cdc_device_descriptor = {
     .bLength = sizeof(cdc_device_descriptor),
@@ -64,14 +66,18 @@ void init_usb() {
 void print_task_main(void* const params) {
     struct SharedOutput* output = (struct SharedOutput*) params;
     while(1) {
-        while (output->current_read_buf > output->current_write_buf) {
-            taskYIELD();
-        }
-        tud_cdc_n_write(
+        // while (output->current_read_buf > output->current_write_buf) {
+        //     taskYIELD();
+        // }
+        int ret = tud_cdc_n_write(
             TINYUSB_CDC_ACM_0,
             output->output_buf[output->current_read_buf % OUTPUT_BUF_COUNT],
+    
             OUTPUT_BUF_SIZE
         );
+        if (ret == 0) {
+            gpio_set_level(LED_RED, 1);
+        }
         tud_cdc_n_write_flush(TINYUSB_CDC_ACM_0);
         // Ideally we should flush lol
         // print_hex(output.output_buf[output.current_read_buf % OUTPUT_BUF_COUNT], OUTPUT_BUF_SIZE);

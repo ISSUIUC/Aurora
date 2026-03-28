@@ -21,6 +21,7 @@ bool setup_max2769(spi_device_handle_t handle) {
     conf3.STAMPEN = 0b1;
     conf3.TIMESYNCEN = 0b0;
     conf3.DATASYNCEN = 0b0;
+    conf3.ADCEN = 0b0;
     // 8mhz
     pll_config.REFDIV = 0b10;
     clock_fractional_div_ratio.SERCLK  = 0b0;

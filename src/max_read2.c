@@ -89,7 +89,7 @@ void read_max2(struct SharedOutput* output) {
         // // Inside your producer loop, after filling a buffer:
         // uint32_t buffer_index = output->current_write_buf % OUTPUT_BUF_COUNT;
         // xQueueSend(usb_tx_queue, &buffer_index, 0); // Push to queue, don't wait if full
-        if (output->current_write_buf - output->current_read_buf >= 4) {
+        if (output->current_write_buf - output->current_read_buf >= 12) {
             // Orange LED
             gpio_set_level(LED_ORANGE, 1);
         }

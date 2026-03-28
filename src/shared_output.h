@@ -4,7 +4,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #define OUTPUT_BUF_SIZE 1024
-#define OUTPUT_BUF_COUNT 4
+#define OUTPUT_BUF_COUNT 12
 struct SharedOutput {
     uint8_t output_buf[OUTPUT_BUF_COUNT][OUTPUT_BUF_SIZE];
 

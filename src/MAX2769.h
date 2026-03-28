@@ -5,7 +5,7 @@
 #include "driver/spi_master.h"
 
 #define MAX2769_CONF1 0
-#define MAX2769_CONF2 2
+#define MAX2769_CONF2 1
 #define MAX2769_CONF3 2
 #define MAX2769_PLLCONF 3
 #define MAX2769_DIV 4
