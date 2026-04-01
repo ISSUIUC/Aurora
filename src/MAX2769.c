@@ -47,9 +47,6 @@ bool setup_max2769(spi_device_handle_t handle) {
  * @param data the 32 bit value to write to the max
  */
 esp_err_t max2769_write(spi_device_handle_t handle, uint8_t register_id, uint32_t data) {
-    printf("data %x",(unsigned int) data);
-    printf(" sregister_id %x\n", (unsigned int) register_id);
-
     spi_transaction_t t = {
         .cmd = 0,
         .flags = SPI_TRANS_USE_TXDATA | SPI_TRANS_USE_RXDATA,
